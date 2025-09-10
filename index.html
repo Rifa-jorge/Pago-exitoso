@@ -282,7 +282,8 @@
                     📝 Completa los datos de los participantes
                 </h2>
                 <p style="text-align: center; margin-bottom: 30px; color: #666;">
-                    Ingresa el nombre de cada persona que participará en la rifa
+                    Ingresa el nombre completo y teléfono de cada participante.<br>
+                    <strong>💡 Tip:</strong> Puedes usar el mismo teléfono para todos los tickets si quieres.
                 </p>
                 
                 <div class="tickets-grid" id="ticketsGrid">
@@ -291,15 +292,16 @@
 
                 <div class="submit-section" id="submitSection">
                     <button type="button" class="submit-button" id="submitButton" onclick="submitData()">
-                        🎫 Confirmar Participantes
+                        ✅ Confirmar Participantes
                     </button>
                 </div>
             </div>
 
             <div class="final-success" id="finalSuccess">
-                <h2>🌟 ¡Registro Completado! 🌟</h2>
-                <p>Los participantes han sido registrados exitosamente.</p>
-                <p style="margin-top: 15px;">¡Mucha suerte en la rifa y gracias por ayudar a Jorge!</p>
+                <h2>🙏 ¡Muchas Gracias! 🙏</h2>
+                <p>Los participantes han sido registrados exitosamente en la rifa.</p>
+                <p style="margin-top: 15px;"><strong>¡Tu apoyo significa mucho para Jorge y su familia!</strong></p>
+                <p style="margin-top: 10px;">Te contactaremos si alguno de tus tickets resulta ganador.</p>
             </div>
         </div>
     </div>
@@ -360,7 +362,7 @@
                     <h3>🎫 Ticket #${i}</h3>
                     <input type="text" id="nombre_${i}" placeholder="Nombre completo del participante" required>
                     <input type="email" id="email_${i}" placeholder="Email (opcional)">
-                    <input type="tel" id="telefono_${i}" placeholder="Teléfono (opcional)">
+                    <input type="tel" id="telefono_${i}" placeholder="Teléfono (obligatorio)" required>
                 `;
                 ticketsGrid.appendChild(ticket);
             }
@@ -379,12 +381,21 @@
             submitButton.disabled = true;
 
             try {
-                // Validar que todos los nombres estén completos
+                // Validar que todos los nombres y teléfonos estén completos
                 for (let i = 1; i <= numTickets; i++) {
                     const nombre = document.getElementById(`nombre_${i}`).value.trim();
+                    const telefono = document.getElementById(`telefono_${i}`).value.trim();
+                    
                     if (!nombre) {
                         alert(`Por favor completa el nombre para el Ticket #${i}`);
-                        submitButton.textContent = '🎫 Confirmar Participantes';
+                        submitButton.textContent = '✅ Confirmar Participantes';
+                        submitButton.disabled = false;
+                        return;
+                    }
+                    
+                    if (!telefono) {
+                        alert(`Por favor completa el teléfono para el Ticket #${i}`);
+                        submitButton.textContent = '✅ Confirmar Participantes';
                         submitButton.disabled = false;
                         return;
                     }
@@ -405,7 +416,7 @@
                         i,
                         nombre,
                         email || '',
-                        telefono || ''
+                        telefono
                     ];
 
                     // Enviar a Google Sheets
@@ -427,21 +438,26 @@
 
         // Función auxiliar para enviar datos a Google Sheets
         async function sendToGoogleSheets(rowData) {
-            console.log('Datos a enviar:', rowData);
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxgkqbGK_5zK0Zi9eewUrgYOSbbjcVyBJ1kbBniOmi4o_IkVZ0bffySLp1pV6hIfkej/exec';
             
-            // Simular delay de envío (quitar cuando tengas Google Apps Script)
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            // TODO: Aquí irá la llamada real a Google Apps Script
-            // const response = await fetch('TU_URL_DE_GOOGLE_APPS_SCRIPT', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ data: rowData })
-            // });
-            // 
-            // if (!response.ok) {
-            //     throw new Error('Error al enviar datos');
-            // }
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ data: rowData }),
+                    mode: 'no-cors' // Necesario para Google Apps Script
+                });
+                
+                // Con no-cors no podemos leer la respuesta, pero si llega aquí es que se envió
+                console.log('Datos enviados exitosamente:', rowData);
+                return true;
+                
+            } catch (error) {
+                console.error('Error al enviar:', error);
+                throw error;
+            }
         }
     </script>
 </body>
